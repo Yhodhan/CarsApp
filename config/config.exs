@@ -7,10 +7,6 @@
 # General application configuration
 import Config
 
-config :cars_app,
-  ecto_repos: [CarsApp.Repo],
-  generators: [timestamp_type: :utc_datetime]
-
 # Configures the endpoint
 config :cars_app, CarsAppWeb.Endpoint,
   url: [host: "localhost"],
