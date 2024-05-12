@@ -7,12 +7,12 @@ services:
     ports:
       - "9042:9042"
     environment:
+      - CASSANDRA_CLUSTER_NAME=cloudinfra
       - CASSANDRA_USER=admin
       - CASSANDRA_PASSWORD=admin
-    volumes:
-      - cassandra-data:/var/lib/cassandra
   redis:
     image: redis:latest
+    container_name: redis-container
     restart: always
     ports:
       - "6379:6379"
@@ -20,6 +20,4 @@ services:
       - REDIS_PASSWORD=my-password
       - REDIS_PORT=6379
       - REDIS_DATABASES=16
-    volumes:
-      - /path/to/local/data:/root/redis
-      - /path/to/local/redis.conf:/usr/local/etc/redis/redis.conf
+      
