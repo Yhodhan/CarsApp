@@ -20,4 +20,3 @@ services:
       - REDIS_PASSWORD=my-password
       - REDIS_PORT=6379
       - REDIS_DATABASES=16
-      
