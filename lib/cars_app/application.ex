@@ -9,7 +9,6 @@ defmodule CarsApp.Application do
   def start(_type, _args) do
     children = [
       CarsAppWeb.Telemetry,
-      CarsApp.Repo,
       {DNSCluster, query: Application.get_env(:cars_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: CarsApp.PubSub},
       # Start a worker by calling: CarsApp.Worker.start_link(arg)
