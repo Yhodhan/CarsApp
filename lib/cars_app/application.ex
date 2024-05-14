@@ -11,6 +11,8 @@ defmodule CarsApp.Application do
       CarsAppWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:cars_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: CarsApp.PubSub},
+      {Redix, host: "127.0.0.1", port: 6379, name: :redix},
+      {Xandra, nodes: ["127.0.0.1:9042"], name: :xandra},
       # Start a worker by calling: CarsApp.Worker.start_link(arg)
       # {CarsApp.Worker, arg},
       # Start to serve requests, typically the last entry
