@@ -11,13 +11,19 @@ defmodule CarsAppWeb.PageController do
     send_response_by_redis_status(conn, redis_state)
   end
 
-  def cars(conn, _params) do
+  def cars(conn, %{"_json" => _json_data}) do
+    # TODO: Store group of cars from json_data
     send_resp(conn, 200, "")
   end
 
-  def journey(conn, _params) do
+  def cars(conn, _), do: send_resp(conn, 400, "400 Bad Request")
+
+  def journey(conn, %{"_json" => _json_data}) do
+    # TODO: Store group of people from json_data
     send_resp(conn, 200, "")
   end
+
+  def journey(conn, _), do: send_resp(conn, 400, "400 Bad Request")
 
   def dropoff(conn, %{"ID" => id}) do
     case Redix.command(:redix, ["GET", id]) do
@@ -30,9 +36,7 @@ defmodule CarsAppWeb.PageController do
     end
   end
 
-  def dropoff(conn, _) do
-    send_resp(conn, 400, "400 Bad Request")
-  end
+  def dropoff(conn, _), do: send_resp(conn, 400, "400 Bad Request")
 
   def locate(conn, %{"ID" => id}) do
     case Redix.command(:redix, ["GET", id]) do
@@ -46,9 +50,7 @@ defmodule CarsAppWeb.PageController do
     end
   end
 
-  def locate(conn, _) do
-    send_resp(conn, 400, "400 Bad Request")
-  end
+  def locate(conn, _), do: send_resp(conn, 400, "400 Bad Request")
 
   defp send_response_by_redis_status(conn, {:error, %Redix.ConnectionError{reason: :closed}}) do
     send_resp(conn, 500, "500 Redis connection closed")
