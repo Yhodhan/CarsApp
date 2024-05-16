@@ -24,4 +24,10 @@ defmodule CarsAppWeb.Router do
       live_dashboard "/dashboard", metrics: CarsAppWeb.Telemetry
     end
   end
+
+  scope "/", CarsAppWeb do
+    pipe_through :api
+
+    get "/", PageController, :home
+  end
 end
