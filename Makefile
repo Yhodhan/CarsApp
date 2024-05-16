@@ -9,6 +9,9 @@ build:
 	mix do deps.get + compile
 
 run:
+	iex -S mix phx.server
+
+run-server-only:
 	mix phx.server
 
 lint:
