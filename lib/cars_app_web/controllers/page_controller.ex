@@ -11,9 +11,19 @@ defmodule CarsAppWeb.PageController do
     send_response_by_redis_status(conn, redis_state)
   end
 
-  def cars(conn, %{"_json" => _json_data}) do
-    # TODO: Store group of cars from json_data
-    send_resp(conn, 200, "")
+  def cars(conn, %{"_json" => json_data}) do
+    is_json_format_valid? =
+      Enum.reduce(json_data, true, fn car_map, acc ->
+        acc and is_format_valid?(car_map)
+      end)
+
+    if is_json_format_valid? do
+      #TODO: Check that redis is connected
+      store_cars_list(json_data)
+      send_resp(conn, 200, "200 OK")
+    else
+      cars(conn, %{})
+    end
   end
 
   def cars(conn, _), do: send_resp(conn, 400, "400 Bad Request")
@@ -63,4 +73,14 @@ defmodule CarsAppWeb.PageController do
   defp send_response_by_redis_status(conn, {:ok, _}) do
     send_resp(conn, 200, "200 OK")
   end
+
+  defp store_cars_list(cars_map) do
+    Enum.each(cars_map, fn car_map ->
+      car_string = "{\"id\":#{Map.get(car_map, "id")}, \"seats\":#{Map.get(car_map, "seats")}}"
+      Redix.command(:redix, ["LPUSH", "cars_list", car_string])
+    end)
+  end
+
+  defp is_format_valid?(%{"id" => _id, "seats" => _seats}), do: true
+  defp is_format_valid?(_), do: false
 end
