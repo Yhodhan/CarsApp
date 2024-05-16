@@ -29,5 +29,6 @@ defmodule CarsAppWeb.Router do
     pipe_through :api
 
     get "/", PageController, :home
+    get "/status", PageController, :status
   end
 end
