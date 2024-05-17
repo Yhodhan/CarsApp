@@ -11,6 +11,17 @@ defmodule CarsAppWeb.PageController do
     send_response_by_redis_status(conn, redis_state)
   end
 
+  @doc """
+    We'll store all cars in the list when the format is correct, the json needs to have
+    the car id and the seats.
+
+    Every car in the list will be stored as follow:
+    * C[4 number ID padded with zeroes] as the key
+    * String with json format with the seats of car and availability (0 as default)
+
+    When the format is correct we will respond with a 200 OK
+    Otherwise we'll response with a 400 Bad Request
+  """
   def cars(conn, %{"_json" => json_data}) do
     is_json_format_valid? =
       Enum.reduce(json_data, true, fn car_map, acc ->
@@ -71,8 +82,9 @@ defmodule CarsAppWeb.PageController do
   defp store_cars_and_send_resp(conn, cars_map, true = _is_format_valid?) do
     # TODO: We should check redis connection and send correct response if it is closed
     Enum.each(cars_map, fn car_map ->
-      car_string = "{\"id\":#{Map.get(car_map, "id")}, \"seats\":#{Map.get(car_map, "seats")}}"
-      Redix.command(:redix, ["LPUSH", "cars_list", car_string])
+      str_id = Integer.to_string(Map.get(car_map, "id")) |> String.pad_leading(4, "0")
+      car_values= "{\"seats\":#{Map.get(car_map, "seats")}, \"availability\":0}"
+      Redix.command(:redix, ["SET", "C#{str_id}", car_values])
     end)
 
     send_resp(conn, 200, "200 OK")
