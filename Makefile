@@ -1,7 +1,11 @@
 .PHONY: up setup build run lint fmt test test.watch
 
 up:
-	docker-compose up
+	docker-compose up -d
+
+down:
+	docker-compose down
+
 setup:
 	make build
 
