@@ -42,8 +42,12 @@ defmodule CarsAppWeb.PageController do
 
   def dropoff(conn, %{"ID" => id}) do
     case Redix.command(:redix, ["GET", id]) do
-      {:error, _} -> send_resp(conn, 500, "500 Redis connection closed")
-      {:ok, nil} -> send_resp(conn, 404, "404 Not Found")
+      {:error, _} ->
+        send_resp(conn, 500, "500 Redis connection closed")
+
+      {:ok, nil} ->
+        send_resp(conn, 404, "404 Not Found")
+
       {:ok, _group_id} ->
         # TODO: Send the correct response
         # 200 OK or 204 No Content When the group is unregistered correctly
@@ -55,8 +59,12 @@ defmodule CarsAppWeb.PageController do
 
   def locate(conn, %{"ID" => id}) do
     case Redix.command(:redix, ["GET", id]) do
-      {:error, _} -> send_resp(conn, 500, "500 Redis connection closed")
-      {:ok, nil} -> send_resp(conn, 404, "404 Not Found")
+      {:error, _} ->
+        send_resp(conn, 500, "500 Redis connection closed")
+
+      {:ok, nil} ->
+        send_resp(conn, 404, "404 Not Found")
+
       {:ok, _group_id} ->
         # TODO: Send the correct response
         # * 200 OK With the car as the payload when the group is assigned to a car.
@@ -83,7 +91,7 @@ defmodule CarsAppWeb.PageController do
     # TODO: We should check redis connection and send correct response if it is closed
     Enum.each(cars_map, fn car_map ->
       str_id = Integer.to_string(Map.get(car_map, "id")) |> String.pad_leading(4, "0")
-      car_values= "{\"seats\":#{Map.get(car_map, "seats")}, \"availability\":0}"
+      car_values = "{\"seats\":#{Map.get(car_map, "seats")}, \"availability\":0}"
       Redix.command(:redix, ["SET", "C#{str_id}", car_values])
     end)
 
