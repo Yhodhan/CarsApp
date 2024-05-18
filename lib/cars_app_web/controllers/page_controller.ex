@@ -1,4 +1,5 @@
 defmodule CarsAppWeb.PageController do
+  alias CarsApp.Cars
   use CarsAppWeb, :controller
 
   def home(conn, _params) do
@@ -12,23 +13,21 @@ defmodule CarsAppWeb.PageController do
   end
 
   @doc """
-    We'll store all cars in the list when the format is correct, the json needs to have
-    the car id and the seats.
-
-    Every car in the list will be stored as follow:
-    * C[4 number ID padded with zeroes] as the key
-    * String with json format with the seats of car and availability (0 as default)
+    We'll receive a json with a list of cars and we are going to store them.
 
     When the format is correct we will respond with a 200 OK
     Otherwise we'll response with a 400 Bad Request
   """
   def cars(conn, %{"_json" => json_data}) do
-    is_json_format_valid? =
-      Enum.reduce(json_data, true, fn car_map, acc ->
-        acc and is_format_valid?(car_map)
-      end)
+    is_json_format_valid? = is_json_format_valid?(json_data)
 
-    store_cars_and_send_resp(conn, json_data, is_json_format_valid?)
+    with true <- is_json_format_valid? do
+      {:ok, _} = Cars.store_cars(json_data)
+      send_resp(conn, 200, "200 OK")
+    else
+      _ ->
+        send_resp(conn, 400, "400 Bad Request")
+    end
   end
 
   def cars(conn, _), do: send_resp(conn, 400, "400 Bad Request")
@@ -58,6 +57,7 @@ defmodule CarsAppWeb.PageController do
   def dropoff(conn, _), do: send_resp(conn, 400, "400 Bad Request")
 
   def locate(conn, %{"ID" => id}) do
+    # TODO: I have to change this logic
     case Redix.command(:redix, ["GET", id]) do
       {:error, _} ->
         send_resp(conn, 500, "500 Redis connection closed")
@@ -87,19 +87,11 @@ defmodule CarsAppWeb.PageController do
     send_resp(conn, 200, "200 OK")
   end
 
-  defp store_cars_and_send_resp(conn, cars_map, true = _is_format_valid?) do
-    # TODO: We should check redis connection and send correct response if it is closed
-    Enum.each(cars_map, fn car_map ->
-      str_id = Integer.to_string(Map.get(car_map, "id")) |> String.pad_leading(4, "0")
-      car_values = "{\"seats\":#{Map.get(car_map, "seats")}, \"availability\":0}"
-      Redix.command(:redix, ["SET", "C#{str_id}", car_values])
+  defp is_json_format_valid?(json_data) when is_list(json_data) do
+    Enum.reduce(json_data, true, fn car_map, acc ->
+      acc and Cars.is_car_format_valid?(car_map)
     end)
-
-    send_resp(conn, 200, "200 OK")
   end
 
-  defp store_cars_and_send_resp(conn, _, false = _is_format_valid?), do: cars(conn, %{})
-
-  defp is_format_valid?(%{"id" => _id, "seats" => _seats}), do: true
-  defp is_format_valid?(_), do: false
+  defp is_json_format_valid?(_), do: false
 end
