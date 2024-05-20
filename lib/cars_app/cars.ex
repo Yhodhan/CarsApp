@@ -1,18 +1,12 @@
 defmodule CarsApp.Cars do
-  import Ecto.Changeset
+  alias CarsApp.Cars.Car
 
   @doc """
   We receive the parameters of the car and we'll return if the format is valid creating
   a changeset to validate all the parameters
   """
   def is_car_format_valid?(car_params) do
-    types = %{id: :integer, seats: :integer}
-
-    {%{}, types}
-    |> cast(car_params, Map.keys(types))
-    |> validate_required([:id, :seats])
-    |> validate_number(:id, greater_than: 0)
-    |> validate_number(:seats, greater_than: 0, less_than: 8)
+    Car.changeset(car_params)
     |> Map.get(:valid?)
   end
 
