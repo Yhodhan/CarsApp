@@ -28,7 +28,6 @@ defmodule CarsAppWeb.Router do
   scope "/", CarsAppWeb do
     pipe_through :api
 
-    get "/", PageController, :home
     get "/status", PageController, :status
     put "/cars", PageController, :cars
     post "/journey", PageController, :journey

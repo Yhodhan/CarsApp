@@ -2,14 +2,20 @@ defmodule CarsAppWeb.PageController do
   alias CarsApp.Cars
   use CarsAppWeb, :controller
 
-  def home(conn, _params) do
-    send_resp(conn, 200, "Welcome to Cars App")
-  end
+  action_fallback CarsAppWeb.FallbackController
 
   def status(conn, _params) do
     # I'll get the status of the redis connection by using a GET command
-    redis_state = Redix.command(:redix, ["GET", "val"])
-    send_response_by_redis_status(conn, redis_state)
+    case Redix.command(:redix, ["GET", "val"]) do
+      {:error, %Redix.ConnectionError{reason: :closed}} ->
+        {:error, :connection_closed}
+
+      {:error, _} ->
+        {:error, :unknown_error}
+
+      {:ok, _} ->
+        send_resp(conn, 200, "200 OK")
+    end
   end
 
   @doc """
@@ -19,79 +25,45 @@ defmodule CarsAppWeb.PageController do
     Otherwise we'll response with a 400 Bad Request
   """
   def cars(conn, %{"_json" => json_data}) do
-    is_json_format_valid? = is_json_format_valid?(json_data)
+    is_json_format_valid? = check_format_json(json_data)
 
-    with true <- is_json_format_valid? do
+    with {:ok, :valid} <- is_json_format_valid? do
       {:ok, _} = Cars.store_cars(json_data)
       send_resp(conn, 200, "200 OK")
-    else
-      _ ->
-        send_resp(conn, 400, "400 Bad Request")
     end
   end
 
-  def cars(conn, _), do: send_resp(conn, 400, "400 Bad Request")
+  def cars(_, _), do: {:error, :bad_request}
 
   def journey(conn, %{"_json" => _json_data}) do
     # TODO: Store group of people from json_data
     send_resp(conn, 200, "")
   end
 
-  def journey(conn, _), do: send_resp(conn, 400, "400 Bad Request")
+  def journey(_, _), do: {:error, :bad_request}
 
-  def dropoff(conn, %{"ID" => id}) do
-    case Redix.command(:redix, ["GET", id]) do
-      {:error, _} ->
-        send_resp(conn, 500, "500 Redis connection closed")
-
-      {:ok, nil} ->
-        send_resp(conn, 404, "404 Not Found")
-
-      {:ok, _group_id} ->
-        # TODO: Send the correct response
-        # 200 OK or 204 No Content When the group is unregistered correctly
-        send_resp(conn, 200, "200 OK")
-    end
+  def dropoff(conn, %{"ID" => _id}) do
+    # TODO
+    send_resp(conn, 200, "")
   end
 
-  def dropoff(conn, _), do: send_resp(conn, 400, "400 Bad Request")
+  def dropoff(_, _), do: {:error, :bad_request}
 
-  def locate(conn, %{"ID" => id}) do
-    # TODO: I have to change this logic
-    case Redix.command(:redix, ["GET", id]) do
-      {:error, _} ->
-        send_resp(conn, 500, "500 Redis connection closed")
-
-      {:ok, nil} ->
-        send_resp(conn, 404, "404 Not Found")
-
-      {:ok, _group_id} ->
-        # TODO: Send the correct response
-        # * 200 OK With the car as the payload when the group is assigned to a car.
-        # * 204 No Content When the group is waiting to be assigned to a car.
-        send_resp(conn, 200, "200 OK")
-    end
+  def locate(conn, %{"ID" => _id}) do
+    # TODO
+    send_resp(conn, 200, "")
   end
 
-  def locate(conn, _), do: send_resp(conn, 400, "400 Bad Request")
+  def locate(_, _), do: {:error, :bad_request}
 
-  defp send_response_by_redis_status(conn, {:error, %Redix.ConnectionError{reason: :closed}}) do
-    send_resp(conn, 500, "500 Redis connection closed")
+  defp check_format_json(json_data) when is_list(json_data) do
+    is_format_valid? =
+      Enum.reduce(json_data, true, fn car_map, acc ->
+        acc and Cars.is_car_format_valid?(car_map)
+      end)
+
+    if is_format_valid?, do: {:ok, :valid}, else: {:error, :bad_request}
   end
 
-  defp send_response_by_redis_status(conn, {:error, _}) do
-    send_resp(conn, 520, "520 Unknown error")
-  end
-
-  defp send_response_by_redis_status(conn, {:ok, _}) do
-    send_resp(conn, 200, "200 OK")
-  end
-
-  defp is_json_format_valid?(json_data) when is_list(json_data) do
-    Enum.reduce(json_data, true, fn car_map, acc ->
-      acc and Cars.is_car_format_valid?(car_map)
-    end)
-  end
-
-  defp is_json_format_valid?(_), do: false
+  defp check_format_json(_), do: {:error, :bad_request}
 end
