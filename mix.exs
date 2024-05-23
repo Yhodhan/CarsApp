@@ -32,14 +32,16 @@ defmodule CarsApp.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:decimal, "~> 2.0"},
       {:phoenix, "~> 1.7.12"},
+      {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
-      {:xandra, "~> 0.14"},
+      {:xandra, "~> 0.18"},
       {:redix, "~> 1.1"},
       {:castore, ">= 0.0.0"}
     ]
