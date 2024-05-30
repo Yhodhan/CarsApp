@@ -1,4 +1,5 @@
 defmodule CarsAppWeb.PageController do
+  alias CarsApp.Groups
   alias CarsApp.Cars
   use CarsAppWeb, :controller
 
@@ -25,7 +26,7 @@ defmodule CarsAppWeb.PageController do
     Otherwise we'll response with a 400 Bad Request
   """
   def cars(conn, %{"_json" => json_data}) do
-    is_json_format_valid? = check_format_json(json_data)
+    is_json_format_valid? = Cars.is_list_cars_format_valid(json_data)
 
     with {:ok, :valid} <- is_json_format_valid? do
       {:ok, _} = Cars.store_cars(json_data)
@@ -35,9 +36,13 @@ defmodule CarsAppWeb.PageController do
 
   def cars(_, _), do: {:error, :bad_request}
 
-  def journey(conn, %{"_json" => _json_data}) do
-    # TODO: Store group of people from json_data
-    send_resp(conn, 200, "")
+  def journey(conn, %{"_json" => json_data}) do
+    is_json_format_valid? = Groups.is_list_group_format_valid?(json_data)
+
+    with {:ok, :valid} <- is_json_format_valid? do
+      {:ok, _} = Groups.store_group(json_data)
+      send_resp(conn, 200, "200 OK")
+    end
   end
 
   def journey(_, _), do: {:error, :bad_request}
@@ -55,15 +60,4 @@ defmodule CarsAppWeb.PageController do
   end
 
   def locate(_, _), do: {:error, :bad_request}
-
-  defp check_format_json(json_data) when is_list(json_data) do
-    is_format_valid? =
-      Enum.reduce(json_data, true, fn car_map, acc ->
-        acc and Cars.is_car_format_valid?(car_map)
-      end)
-
-    if is_format_valid?, do: {:ok, :valid}, else: {:error, :bad_request}
-  end
-
-  defp check_format_json(_), do: {:error, :bad_request}
 end
