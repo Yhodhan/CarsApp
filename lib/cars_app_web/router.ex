@@ -1,6 +1,16 @@
 defmodule CarsAppWeb.Router do
   use CarsAppWeb, :router
 
+  use Plug.ErrorHandler
+
+  defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{message: message}}) do
+    conn |> json(%{errors: message}) |> halt()
+  end
+
+  defp handle_errors(conn, %{reason: %{message: message}}) do
+    conn |> json(%{errors: message}) |> halt()
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end

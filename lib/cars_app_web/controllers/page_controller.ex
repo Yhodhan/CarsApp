@@ -15,7 +15,9 @@ defmodule CarsAppWeb.PageController do
         {:error, :unknown_error}
 
       {:ok, _} ->
-        send_resp(conn, 200, "200 OK")
+        conn
+        |> put_status(:ok)
+        |> json(%{status: "200 OK"})
     end
   end
 
@@ -30,7 +32,10 @@ defmodule CarsAppWeb.PageController do
 
     with {:ok, :valid} <- is_json_format_valid? do
       {:ok, _} = Cars.store_cars(json_data)
-      send_resp(conn, 200, "200 OK")
+
+      conn
+      |> put_status(:ok)
+      |> json(%{status: "200 OK"})
     end
   end
 
@@ -41,7 +46,10 @@ defmodule CarsAppWeb.PageController do
 
     with {:ok, :valid} <- is_json_format_valid? do
       {:ok, _} = Groups.store_group(json_data)
-      send_resp(conn, 200, "200 OK")
+
+      conn
+      |> put_status(:ok)
+      |> json(%{status: "200 OK"})
     end
   end
 
@@ -49,14 +57,18 @@ defmodule CarsAppWeb.PageController do
 
   def dropoff(conn, %{"ID" => _id}) do
     # TODO
-    send_resp(conn, 200, "")
+    conn
+    |> put_status(:ok)
+    |> json(%{status: "200 OK"})
   end
 
   def dropoff(_, _), do: {:error, :bad_request}
 
   def locate(conn, %{"ID" => _id}) do
     # TODO
-    send_resp(conn, 200, "")
+    conn
+    |> put_status(:ok)
+    |> json(%{status: "200 OK"})
   end
 
   def locate(_, _), do: {:error, :bad_request}
